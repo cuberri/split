@@ -1,0 +1,49 @@
+rules_version = '2';
+
+// Security model: there is no login. A group is protected only by its
+// random, unguessable 22-character ID (128 bits). Anyone who has the link
+// can read and edit that group; nobody can list or discover groups.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function validGroup(d) {
+      return d.keys().hasOnly(['name', 'baseCurrency', 'members', 'createdAt'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 80
+        && d.baseCurrency is string && d.baseCurrency.size() == 3
+        && d.members is list && d.members.size() <= 50;
+    }
+
+    function validExpense(d) {
+      return d.keys().hasOnly(['kind', 'title', 'amount', 'currency', 'paidBy', 'split',
+                               'rates', 'rateFixed', 'rateDate', 'date', 'createdBy',
+                               'createdAt', 'updatedAt'])
+        && d.keys().hasAll(['title', 'amount', 'currency', 'paidBy', 'split', 'rates', 'date'])
+        && d.title is string && d.title.size() <= 100
+        && d.amount is int && d.amount > 0 && d.amount < 100000000000
+        && d.currency is string && d.currency.size() == 3
+        && d.paidBy is string && d.paidBy.size() > 0 && d.paidBy.size() <= 40
+        && d.split is map && d.rates is map
+        && d.date is string && d.date.size() == 10;
+    }
+
+    match /groups/{groupId} {
+      // "get" a single group by ID is allowed; "list" (enumerating groups) is not.
+      allow get: if true;
+      allow list: if false;
+      allow create: if groupId.matches('^[A-Za-z0-9_-]{20,}$')
+                    && validGroup(request.resource.data);
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['name', 'baseCurrency', 'members'])
+                    && validGroup(request.resource.data);
+      allow delete: if false;
+
+      // Reading expenses requires knowing the group ID (no collection-group rule exists).
+      match /expenses/{expenseId} {
+        allow read: if true;
+        allow create, update: if exists(/databases/$(database)/documents/groups/$(groupId))
+                              && validExpense(request.resource.data);
+        allow delete: if true;
+      }
+    }
+  }
+}
