@@ -30,7 +30,8 @@ export function splitParts(e) {
  */
 export function computeBalances(expenses, members, base, live) {
   const balances = Object.fromEntries(members.map((m) => [m, 0]));
-  const paid = Object.fromEntries(members.map((m) => [m, 0]));
+  const paid = Object.fromEntries(members.map((m) => [m, 0])); // expenses each person paid for
+  const share = Object.fromEntries(members.map((m) => [m, 0])); // each person's part of the costs
   let totalSpent = 0;
   let missing = 0;
   let usedLive = 0;
@@ -51,9 +52,10 @@ export function computeBalances(expenses, members, base, live) {
     if (e.kind !== 'payment') {
       totalSpent += total;
       paid[e.paidBy] = (paid[e.paidBy] ?? 0) + total;
+      people.forEach((p, i) => (share[p] = (share[p] ?? 0) + shares[i]));
     }
   }
-  return { balances, paid, totalSpent, missing, usedLive };
+  return { balances, paid, share, totalSpent, missing, usedLive };
 }
 
 /**

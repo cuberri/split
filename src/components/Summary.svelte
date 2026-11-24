@@ -37,8 +37,14 @@
 <section class="card">
   <div class="summary-head">
     <div>
-      <div class="muted small">Total spent</div>
+      <div class="muted small">Group total</div>
       <div class="big-number">{format(result.totalSpent, base)}</div>
+      {#if me in result.paid}
+        <div class="my-stats muted small">
+          <span>You paid <strong class="me">{format(result.paid[me], base)}</strong></span>
+          <span>Your share <strong class="me">{format(result.share[me], base)}</strong></span>
+        </div>
+      {/if}
     </div>
     <label class="small">
       Show in
@@ -64,7 +70,7 @@
   {#if !transfers.length}
     <p class="muted">{expenses.length ? 'Everyone is settled up. 🎉' : 'Nothing to settle yet.'}</p>
   {:else}
-    <p class="muted small">{transfers.length} payment{transfers.length === 1 ? '' : 's'} settle everything:</p>
+    <p class="muted small">{transfers.length === 1 ? '1 payment settles' : `${transfers.length} payments settle`} everything:</p>
     <ul class="list">
       {#each transfers as t (`${t.from}>${t.to}`)}
         <li class="transfer">

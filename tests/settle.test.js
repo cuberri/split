@@ -47,8 +47,22 @@ test('computeBalances with currency conversion and custom split', () => {
     { amount: 3000, currency: 'EUR', paidBy: 'A', split: { mode: 'equal', participants: ['A', 'B', 'C'] }, rates: { EUR: 1, CHF: 0.9 } },
     { amount: 1000, currency: 'CHF', paidBy: 'B', split: { mode: 'custom', participants: ['A', 'C'], amounts: { A: 700, C: 300 } }, rates: { CHF: 1, EUR: 1.1 } },
   ];
-  const { balances, totalSpent } = computeBalances(expenses, ['A', 'B', 'C'], 'EUR', null);
+  const { balances, totalSpent, paid, share } = computeBalances(expenses, ['A', 'B', 'C'], 'EUR', null);
   assert.deepEqual(balances, { A: 2000 - 770, B: -1000 + 1100, C: -1000 - 330 });
   assert.equal(totalSpent, 4100);
+  assert.deepEqual(paid, { A: 3000, B: 1100, C: 0 });
+  assert.deepEqual(share, { A: 1000 + 770, B: 1000, C: 1000 + 330 });
   assert.equal(Object.values(balances).reduce((a, b) => a + b), 0);
+});
+
+test('payments change balances but not paid or share', () => {
+  const expenses = [
+    { amount: 1000, currency: 'EUR', paidBy: 'A', split: { mode: 'equal', participants: ['A', 'B'] }, rates: {} },
+    { kind: 'payment', amount: 500, currency: 'EUR', paidBy: 'B', split: { mode: 'custom', participants: ['A'], amounts: { A: 500 } }, rates: {} },
+  ];
+  const r = computeBalances(expenses, ['A', 'B'], 'EUR', null);
+  assert.deepEqual(r.balances, { A: 0, B: 0 });
+  assert.deepEqual(r.paid, { A: 1000, B: 0 });
+  assert.deepEqual(r.share, { A: 500, B: 500 });
+  assert.equal(r.totalSpent, 1000);
 });

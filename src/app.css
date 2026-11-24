@@ -214,6 +214,8 @@ button { font: inherit; cursor: pointer; }
 .summary-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .summary-head label { margin: 0; }
 .summary-head select { width: auto; }
+.my-stats { display: flex; flex-wrap: wrap; column-gap: 14px; row-gap: 2px; }
+.my-stats span { white-space: nowrap; }
 .big-number { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .transfer { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
 .balances { list-style: none; margin: 0 0 8px; padding: 0; }
