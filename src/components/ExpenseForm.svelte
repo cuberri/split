@@ -32,6 +32,12 @@
   let rateStatus = $state('idle'); // idle | loading | ok | error
   let error = $state('');
 
+  // Unsaved changes: compare what the user can edit with how the form opened.
+  const formState = () =>
+    JSON.stringify({ title, amountText, currency, date, paidBy, mode, included, customText, fixRate, fixedRateText });
+  const initialState = untrack(formState);
+  let dirty = $derived(formState() !== initialState);
+
   // Look up the rate for the chosen currency and date.
   $effect(() => {
     const cur = currency;
@@ -136,18 +142,42 @@
     onclose();
   }
 
+  // Deliberate close (cross, Cancel, Esc): ask before throwing away typed data.
+  function requestClose() {
+    if (!dirty || confirm(e ? 'Discard your changes?' : 'Discard this expense?')) onclose();
+  }
+
+  // Click on the dark backdrop: only closes an untouched form, and only if the
+  // press also started on the backdrop (dragging out of a text field doesn't count).
+  let pressedBackdrop = false;
+  function onBackdropDown(ev) {
+    pressedBackdrop = ev.target === ev.currentTarget;
+  }
+  function onBackdropClick(ev) {
+    if (pressedBackdrop && ev.target === ev.currentTarget && !dirty) onclose();
+    pressedBackdrop = false;
+  }
+
   function onkeydown(ev) {
-    if (ev.key === 'Escape') onclose();
+    if (ev.key === 'Escape') {
+      ev.preventDefault();
+      requestClose();
+    }
+  }
+
+  // Reloading or closing the browser tab with unsaved changes.
+  function onbeforeunload(ev) {
+    if (dirty) ev.preventDefault();
   }
 </script>
 
-<svelte:window {onkeydown} />
+<svelte:window {onkeydown} {onbeforeunload} />
 
-<div class="overlay" role="presentation" onclick={(ev) => ev.target === ev.currentTarget && onclose()}>
+<div class="overlay" role="presentation" onpointerdown={onBackdropDown} onclick={onBackdropClick}>
   <form class="sheet" onsubmit={save} aria-label={e ? 'Edit expense' : 'Add expense'}>
     <header class="sheet-head">
       <h2>{isPayment ? 'Payment' : e ? 'Edit expense' : 'Add expense'}</h2>
-      <button type="button" class="icon" aria-label="Close" onclick={onclose}>×</button>
+      <button type="button" class="icon" aria-label="Close" onclick={requestClose}>×</button>
     </header>
 
     {#if !isPayment}
@@ -260,7 +290,7 @@
     <div class="sheet-actions">
       {#if e}<button type="button" class="btn danger" onclick={remove}>Delete</button>{/if}
       <span class="grow"></span>
-      <button type="button" class="btn secondary" onclick={onclose}>Cancel</button>
+      <button type="button" class="btn secondary" onclick={requestClose}>Cancel</button>
       <button class="btn primary">Save</button>
     </div>
   </form>
