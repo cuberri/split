@@ -8,4 +8,8 @@ export default defineConfig({
   base: './',
   plugins: [svelte()],
   build: { chunkSizeWarningLimit: 800 }, // the Firestore SDK alone is ~550 kB (~170 kB gzipped)
+  define: {
+    // Shown in the footer's tooltip (see src/lib/version.js).
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
 });

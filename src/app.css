@@ -178,7 +178,6 @@ button { font: inherit; cursor: pointer; }
 .segmented { display: flex; gap: 4px; padding: 3px; background: var(--border); border-radius: 11px; margin-bottom: 8px; }
 
 /* Floating add button */
-.fab-space { height: 72px; }
 .fab {
   position: fixed; left: 50%; transform: translateX(-50%);
   bottom: calc(18px + env(safe-area-inset-bottom));
@@ -234,3 +233,14 @@ button { font: inherit; cursor: pointer; }
   background: var(--primary-soft);
   color: var(--text);
 }
+
+/* Footer with the build version */
+.app-footer {
+  padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.app-footer a { color: inherit; }
+/* Leave room so the floating "Add expense" button never covers the footer or the last expense. */
+.app-footer.with-fab { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }

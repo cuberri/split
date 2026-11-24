@@ -146,7 +146,6 @@
     <Summary groupId={id} {group} {expenses} {live} {me} />
   {/if}
 
-  <div class="fab-space"></div>
   <button class="fab" onclick={() => (editing = 'new')}>+ Add expense</button>
 
   {#if editing}
